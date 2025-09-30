@@ -1,0 +1,9 @@
+{
+  "automatonName": "auto1",
+  "posibleStates": ["q1", "q2", "q3"],
+  "alphabet": ["a", "b", "c", "d"],
+  "initialState": "q3",
+  "finalStates": ["q2", "q3"],
+  "transitionMap": 
+        [[["q0", "1"], "q1"], [["q0", "1"], "q1"]]
+}
