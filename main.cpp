@@ -67,27 +67,30 @@ consola cadenas aceptadas.
 // https://stackoverflow.com/questions/51707031/nlohmann-json-c-include-issue?rq=4
 
 /* ------------------------- Libraries ------------------------- */
+#include <fstream>  /* ifstream */
 #include <iostream> /* cin/cout */
 #include <map>
-#include <nlohmann/json.hpp> /* JSON files manipulation */
-#include <sstream>
-#include <string> /* stoi() */
+#include <nlohmann/json.hpp> /* [2] JSON files manipulation */
+#include <sstream>           /* [1] stringstream tokenizer*/
+#include <string>
 
 using namespace std;
+
+using json = nlohmann::json;
 
 /* ------------------------- Functions ------------------------- */
 
 void diplayMenu() {
     cout << endl
-         << "\n.----------------------."
-            "\n||    -{ MENU }-     ||"
-            "\n.---------------------."
-            "\n| [1] Ejercicio 1     |"
-            "\n| [2] Ejercicio 2     |"
-            "\n| [3] Crear autómata  |"
-            "\n| [4] Cargar autómata |"
-            "\n|           [5] Salir |"
-            "\n.---------------------.\n";
+         << "\n.-----------------------."
+            "\n||     -{ MENU }-      ||"
+            "\n.-----------------------."
+            "\n| [1] Crear autómata    |"
+            "\n| [2] Cargar autómata   |"
+            "\n| [3] Ejecutar autómata |"
+            "\n| [4] Exportar autómata |"
+            "\n|             [5] Salir |"
+            "\n.-----------------------.\n";
 }
 
 void endTitle() {
@@ -95,105 +98,6 @@ void endTitle() {
             "\n ('Y') ) |  Hasta luego! | "
             "\n /   \\/  * ------------- *"
             "\n(\\|||/)        FIN      \n";
-}
-
-void automatonTitle1() {
-    cout << "\n          ======  -- 1 -->  ____"
-            "\nStart |> || q0 ||          | q1 |"
-            "\n  End <|  ======  <-- 1 --  ‾‾‾‾"
-            "\n           |  ^             ^  |"
-            "\n           0  |             |  0"
-            "\n           |  0             0  |"
-            "\n           v  |             |  v"
-            "\n           ____  -- 1 -->  ____"
-            "\n          | q2 |          | q3 |"
-            "\n           ‾‾‾‾  <-- 1 --  ‾‾‾‾\n";
-
-    cout << "\n^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^"
-            "\n||                     Autómata I                     ||"
-            "\n|| A = (Q, Σ, δ, s, F)                                ||"
-            "\n|| Conjunto de Estados Posibles  Q: {q0, q1, q2, q3}  ||"
-            "\n|| Alfabeto                      Σ: {0, 1}            ||"
-            "\n|| Estado Inicial                s: q0                ||"
-            "\n|| Conjunto de Estados finales   F: q1                ||"
-            "\nv-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v\n";
-}
-
-void automatonTitle2() {
-    cout << "\n                                                           /\\"
-            "\n                                                         _v__|_"
-            "\n                                               / - 0 -> |  q3  |"
-            "\n                                              /       /  ‾‾‾‾‾‾ "
-            " \\    /\\"
-            "\n          ____          ____          ====== / <- 1 -/          "
-            "  \\ _v__|_"
-            "\nStart |> | q0 | - 0 -> | q1 | - 1 -> || q2 || ----------- 1 "
-            "-----> |  q4  |"
-            "\n          ‾‾‾‾          ‾‾‾‾          ======                    "
-            "    ‾‾‾‾‾‾"
-            "\n                                       <| End\n";
-
-    cout << "\n^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^-^"
-            "\n||                     Autómata II                        ||"
-            "\n|| A = (Q, Σ, δ, s, F)                                    ||"
-            "\n|| Conjunto de Estados Posibles  Q: {q0, q1, q2, q3, q4}  ||"
-            "\n|| Alfabeto                      Σ: {0, 1}                ||"
-            "\n|| Estado Inicial                s: q0                    ||"
-            "\n|| Conjunto de Estados finales   F: q2                    ||"
-            "\nv-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v-v\n";
-}
-
-string getNextState(string initialState, int transitionInput,
-                    map<pair<string, int>, string> transitionMap) {
-    auto it = transitionMap.find({initialState, transitionInput});
-
-    if (it != transitionMap.end()) {
-        cout << endl << "Estado Resultado: " << it->second << endl;
-        cout << "T(" << initialState << ", " << transitionInput
-             << ") = " << it->second << endl;
-    } else {
-        cout << endl << "[!] Transición no válida" << endl;
-    }
-
-    return it->second;
-}
-
-string getNextState1(string initialState, int transitionInput) {
-    map<pair<string, int>, string> transitionMap = {
-        {{"q0", 1}, "q1"}, {{"q1", 0}, "q3"}, {{"q2", 0}, "q0"},
-        {{"q3", 1}, "q2"}, {{"q0", 0}, "q2"}, {{"q1", 1}, "q0"},
-        {{"q2", 1}, "q3"}, {{"q3", 0}, "q1"}};
-
-    auto it = transitionMap.find({initialState, transitionInput});
-
-    if (it != transitionMap.end()) {
-        cout << endl << "Estado Resultado: " << it->second << endl;
-        cout << "T(" << initialState << ", " << transitionInput
-             << ") = " << it->second << endl;
-    } else {
-        cout << endl << "[!] Transición no válida" << endl;
-    }
-
-    return it->second;
-}
-
-string getNextState2(string initialState, int transitionInput) {
-    map<pair<string, int>, string> transitionMap = {
-        {{"q0", 0}, "q1"}, {{"q1", 1}, "q2"}, {{"q2", 0}, "q3"},
-        {{"q2", 1}, "q4"}, {{"q3", 0}, "q3"}, {{"q3", 1}, "q2"},
-        {{"q4", 0}, "q3"}, {{"q4", 1}, "q4"}};
-
-    auto it = transitionMap.find({initialState, transitionInput});
-
-    if (it != transitionMap.end()) {
-        cout << endl << "Estado Resultado: " << it->second << endl;
-        cout << "T(" << initialState << ", " << transitionInput
-             << ") = " << it->second << endl;
-    } else {
-        cout << endl << "[!] Transición no válida" << endl;
-    }
-
-    return it->second;
 }
 
 class Automaton {
@@ -238,7 +142,7 @@ class Automaton {
         }
         cout << "}";
 
-        cout << endl << "Funciones de transición       𝜹:";
+        cout << endl << "Funciones de transición       𝜹:" << endl;
 
         for (auto transition : transitionMap) {
             cout << "    T(" << transition.first.first << ", "
@@ -246,7 +150,61 @@ class Automaton {
                  << endl;
         }
 
-        cout << "---------------------------------------------------------";
+        cout << "---------------------------------------------------------"
+             << endl;
+    }
+
+    void runAutomaton() {
+        /* - Auxiliaries - */
+        int i;
+
+        string currentCharacter;
+        string automatonInput;
+        string nextState;
+        string currentByte;
+
+        /* - Validators - */
+        bool validString = false;
+
+        while (validString == false) {
+            cout << "Ingrese una cadena: ";
+            cin >> automatonInput;
+
+            for (int i = 0; i < automatonInput.length(); i++) {
+                currentCharacter = automatonInput[i];
+                auto it =
+                    find(alphabet.begin(), alphabet.end(), currentCharacter);
+
+                if (it != alphabet.end()) {
+                    validString = true;
+                } else {
+                    cout << endl << "    [!] Cadena no válida\n" << endl;
+                    validString = false;
+                    break;
+                }
+            }
+            validString = true;
+        }
+
+        cout << endl << "[*] Cadena válida" << endl;
+        nextState = initialState;
+
+        cout << endl << "[*] Estado inicial: " << nextState << endl;
+
+        for (i = 0; i < automatonInput.length(); i++) {
+            currentByte = automatonInput[i];
+            nextState = getNextState(nextState, currentByte, transitionMap);
+        }
+
+        auto it = find(finalStates.begin(), finalStates.end(), nextState);
+
+        if (it != finalStates.end()) {
+            cout << endl << "[*] Estado final: " << nextState << endl;
+        } else {
+            cout << endl
+                 << "[!] Estado final no válido: " << nextState << endl
+                 << "[!] Cadena no válida";
+        }
     }
 
     Automaton(string _automatonName, vector<string> _posibleStates,
@@ -259,6 +217,22 @@ class Automaton {
         initialState = _initialState;
         finalStates = _finalStates;
         transitionMap = _transitionMap;
+    }
+
+    static string getNextState(
+        string initialState, string transitionInput,
+        map<pair<string, string>, string> transitionMap) {
+        auto it = transitionMap.find({initialState, transitionInput});
+
+        if (it != transitionMap.end()) {
+            cout << endl << "Estado Resultado: " << it->second << endl;
+            cout << "T(" << initialState << ", " << transitionInput
+                 << ") = " << it->second << endl;
+        } else {
+            cout << endl << "[!] Transición no válida" << endl;
+        }
+
+        return it->second;
     }
 };
 
@@ -303,8 +277,8 @@ void getAutomaton() {
     getline(cin >> ws, posibleStatesInput);
 
     cout << endl << "[*] Estados registrados: ";
-    stringstream ss1(posibleStatesInput);  // [1]
-    while (getline(ss1, token, delimiter[0])) {
+    stringstream ssPosibleStates(posibleStatesInput);  // [1]
+    while (getline(ssPosibleStates, token, delimiter[0])) {
         token.erase(remove_if(token.begin(), token.end(), ::isspace),
                     token.end());
         posibleStates.push_back(token);
@@ -320,8 +294,8 @@ void getAutomaton() {
     getline(cin >> ws, alphabetInput);
 
     cout << endl << "[*] Alfabeto registrado: ";
-    stringstream ss2(alphabetInput);  // [1]
-    while (getline(ss2, token, delimiter[0])) {
+    stringstream ssAlphabet(alphabetInput);  // [1]
+    while (getline(ssAlphabet, token, delimiter[0])) {
         token.erase(remove_if(token.begin(), token.end(), ::isspace),
                     token.end());
         alphabet.push_back(token);
@@ -444,6 +418,8 @@ void getAutomaton() {
 
         // [BUG: 29/sep/2025]: Elemento no se captura hasta obtener una segunda
         // entrada
+
+        // [To Do] Editar para usar do while
         cout << endl << "Seleccione un elemento del alfabeto (";
         for (i = 0; i < alphabet.size(); i++) {
             if (i != 0) {
@@ -458,7 +434,7 @@ void getAutomaton() {
             cin.clear();
             cin.ignore();
 
-            cout << endl << "Seleccione un estado inicial (";
+            cout << endl << "Seleccione un elemento del alfabeto (";
             for (i = 0; i < alphabet.size(); i++) {
                 if (i != 0) {
                     cout << ", ";
@@ -524,7 +500,145 @@ void getAutomaton() {
 }
 
 void loadAutomaton() {
-    // [2]
+    /* - Auxiliaries - */
+    int i;
+    string fileRoute;
+
+    /* - Automaton atributes - */
+    string automatonName;
+    vector<string> posibleStates;
+    vector<string> alphabet;
+    string initialState;
+    vector<string> finalStates;
+    map<pair<string, string>, string> transitionMap;
+
+    vector<string> existingAutomata;
+
+    cout << endl << "Ingrese ruta del archivo a cargar: ";
+    cin >> fileRoute;  // test.json
+
+    try {
+        std::ifstream file(fileRoute);
+        if (!file.is_open()) {
+            throw std::ios_base::failure("[!] No se pudo abrir el archivo");
+        }
+
+        json data = json::parse(file);  // [2] Parse to JSON
+
+        for (i = 0; i < automata.size(); i++) {
+            existingAutomata.push_back(automata[i].automatonName);
+        }
+
+        for (auto& item : data.items()) {
+            auto it = find(existingAutomata.begin(), existingAutomata.end(),
+                           item.key());
+
+            if (it != existingAutomata.end()) {
+                cout << endl
+                     << "[*] Autómata \"" << item.key() << "\" ya existe";
+            } else {
+                automatonName = item.value()["automatonName"];
+                posibleStates = item.value()["posibleStates"];
+                alphabet = item.value()["alphabet"];
+                initialState = item.value()["initialState"];
+                finalStates = item.value()["finalStates"];
+                transitionMap = item.value()["transitionMap"];
+
+                Automaton newAutomaton(automatonName, posibleStates, alphabet,
+                                       initialState, finalStates,
+                                       transitionMap);
+
+                cout << endl << "[*] Nuevo autómata creado" << endl;
+                automata.push_back(newAutomaton);
+                newAutomaton.printAtributes();
+            }
+        }
+
+    } catch (const std::ios_base::failure& e) {
+        std::cerr << "I/O Error: " << e.what() << std::endl;
+        // Log error, exit gracefully
+    } catch (const std::exception& e) {
+        std::cerr << "General Error: " << e.what() << std::endl;
+    }
+}
+
+void executeAutomaton() {
+    int i, automatonChoice;
+
+    if (automata.empty()) {
+        cout << endl
+             << "[!] Memoria vacía. Favor de crear o cargar autómata" << endl;
+    } else {
+        cout << endl << "--- { Autómatas disponibles } ---" << endl;
+        for (i = 0; i < automata.size(); i++) {
+            cout << "[" << i + 1 << "] " << automata[i].automatonName << endl;
+        }
+        cout << "Seleccione un autómata: ";
+        while (!(
+            (cin >> automatonChoice) &&
+            (automatonChoice >= 1 && automatonChoice < automata.size() + 1))) {
+            cin.clear();
+            cin.ignore();
+        }
+        automatonChoice--;
+
+        Automaton automaton = automata[automatonChoice];
+        automaton.printAtributes();
+        automaton.runAutomaton();
+    }
+}
+
+void exportAutomaton() {
+    int i, automatonChoice;
+
+    if (automata.empty()) {
+        cout << endl
+             << "[!] Memoria vacía. Favor de crear o cargar autómata" << endl;
+    } else {
+        cout << endl << "--- { Autómatas disponibles } ---" << endl;
+        for (i = 0; i < automata.size(); i++) {
+            cout << "[" << i + 1 << "] " << automata[i].automatonName << endl;
+        }
+        cout << "Seleccione un autómata: ";
+        while (!(
+            (cin >> automatonChoice) &&
+            (automatonChoice >= 1 && automatonChoice < automata.size() + 1))) {
+            cin.clear();
+            cin.ignore();
+        }
+        automatonChoice--;
+
+        Automaton automaton = automata[automatonChoice];
+
+        json automatonJSON;
+        automatonJSON["\"" + automaton.automatonName + "\""] = {
+            {{"automatonName", automaton.automatonName},
+             {"posibleStates", automaton.posibleStates},
+             {"alphabet", automaton.alphabet},
+             {"initialState", automaton.initialState},
+             {"finalStates", automaton.finalStates},
+             {"transitionMap", automaton.transitionMap}}};
+
+        for (auto& item : automatonJSON.items()) {
+            cout << item.key() << " : " << item.value();
+        }
+
+        std::ofstream outputFile("output.json");
+
+        // 3. Check if the file was opened successfully
+        if (outputFile.is_open()) {
+            // 4. Write the JSON object to the file
+            // The third argument (indentation level) makes the output
+            // human-readable
+            outputFile << automatonJSON.dump(4);
+            outputFile.close();
+            // std::cout << "JSON data successfully saved to output.json" <<
+            // std::endl; // Optional: for user feedback
+        } else {
+            // std::cerr << "Error: Unable to open file for writing." <<
+            // std::endl; // Optional: for error handling
+        }
+    }
 }
 
 int main() {
@@ -534,120 +648,29 @@ int main() {
     bool run = true;
     bool validString = false;
 
-    /* - Auxiliaries - */
-    int i;
-
-    string initialState;
-    int transitionInput;
-
-    string automatonInput;
-    string nextState;
-    string currentByte;
-
-    string newTransition;
-    map<pair<string, int>, string> transitionMap = {
-        {{"q0", 1}, "q1"}, {{"q1", 0}, "q3"}, {{"q2", 0}, "q0"},
-        {{"q3", 1}, "q2"}, {{"q0", 0}, "q2"}, {{"q1", 1}, "q0"},
-        {{"q2", 1}, "q3"}, {{"q3", 0}, "q1"}};
-
     /* --------------------------- Code ---------------------------- */
     while (run == true) {
         diplayMenu();
-        while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 4))) {
+        while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 5))) {
             cin.clear();
             cin.ignore();
         }
 
         switch (userChoice) {
             case 1:
-                automatonTitle1();
-                while (validString == false) {
-                    cout << "Ingrese una cadena: ";
-                    cin >> automatonInput;
-
-                    for (int i = 0; i < automatonInput.length(); i++) {
-                        if ((automatonInput[i] == '0') ||
-                            (automatonInput[i] == '1')) {
-                            validString = true;
-                        } else {
-                            cout << endl
-                                 << "    [!] Cadena no válida\n"
-                                 << endl;
-                            validString = false;
-                            break;
-                        }
-                    }
-                }
-
-                cout << endl << "[*] Cadena válida" << endl;
-                nextState = "q0";
-
-                cout << endl << "[*] Estado inicial: " << nextState << endl;
-
-                for (i = 0; i < automatonInput.length(); i++) {
-                    currentByte = automatonInput[i];
-                    // cout << endl << "[" << currentByte << "]";
-                    nextState = getNextState1(nextState, stoi(currentByte));
-                }
-
-                cout << endl << "[*] Estado final: " << nextState << endl;
-
-                if (nextState == "q0") {
-                    cout << endl << "[*] Estado final: " << nextState << endl;
-                } else {
-                    cout << endl
-                         << "[!] Estado final no válido: " << nextState << endl
-                         << "[!] Cadena no válida";
-                }
-
-                break;
-
-            case 2:
-                automatonTitle2();
-                while (validString == false) {
-                    cout << "Ingrese una cadena: ";
-                    cin >> automatonInput;
-
-                    for (int i = 0; i < automatonInput.length(); i++) {
-                        if ((automatonInput[i] == '0') ||
-                            (automatonInput[i] == '1')) {
-                            validString = true;
-                        } else {
-                            cout << endl
-                                 << "    [!] Cadena no válida\n"
-                                 << endl;
-                            validString = false;
-                            break;
-                        }
-                    }
-                }
-
-                cout << endl << "[*] Cadena válida" << endl;
-                nextState = "q0";
-
-                cout << endl << "[*] Estado inicial: " << nextState << endl;
-
-                for (i = 0; i < automatonInput.length(); i++) {
-                    currentByte = automatonInput[i];
-                    // cout << endl << "[" << currentByte << "]";
-                    nextState = getNextState2(nextState, stoi(currentByte));
-                }
-
-                if (nextState == "q2") {
-                    cout << endl << "[*] Estado final: " << nextState << endl;
-                } else {
-                    cout << endl
-                         << "[!] Estado final no válido: " << nextState << endl
-                         << "[!] Cadena no válida";
-                }
-                break;
-
-            case 3:
                 getAutomaton();
                 break;
 
-            case 4:
+            case 2:
                 loadAutomaton();
+                break;
+
+            case 3:
+                executeAutomaton();
+                break;
+
+            case 4:
+                exportAutomaton();
                 break;
 
             case 5:
