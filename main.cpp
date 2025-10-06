@@ -1,5 +1,6 @@
 /*
-26-27-28-29-30 de septiembre de 2025
+26 de septiembre de 2025
+6 de octubre de 2025
 Vanessa Reteguín - 375533
 
 Actividad 8: Práctica para AFND
@@ -193,7 +194,8 @@ class Automaton {
 
         for (i = 0; i < automatonInput.length(); i++) {
             currentByte = automatonInput[i];
-            nextState = getNextState(nextState, currentByte, transitionMap);
+            nextState =
+                getNextState(true, nextState, currentByte, transitionMap);
         }
 
         auto it = find(finalStates.begin(), finalStates.end(), nextState);
@@ -204,6 +206,47 @@ class Automaton {
             cout << endl
                  << "[!] Estado final no válido: " << nextState << endl
                  << "[!] Cadena no válida";
+        }
+    }
+
+    void printChains() {
+        /* Auxiliaries */
+        int i, j;
+        string fullstring;
+
+        for (i = 0; i < alphabet.size(); i++) {
+            fullstring = alphabet[i];
+            cout << fullstring << ": " << validChain(fullstring) << endl;
+        }
+    }
+
+    bool validChain(string fullstring) {
+        string nextState;
+        string currentByte;
+        int i;
+
+        // cout << "[" << fullstring << "]" << endl;
+
+        nextState = initialState;
+
+        // cout << endl << "[*] Estado inicial: " << nextState << endl;
+
+        for (i = 0; i < fullstring.length(); i++) {
+            currentByte = fullstring[i];
+            nextState =
+                getNextState(false, nextState, currentByte, transitionMap);
+        }
+
+        auto it = find(finalStates.begin(), finalStates.end(), nextState);
+
+        if (it != finalStates.end()) {
+            // cout << endl << "[*] Estado final: " << nextState << endl;
+            return true;
+        } else {
+            // cout << endl
+            //     << "[!] Estado final no válido: " << nextState << endl
+            //     << "[!] Cadena no válida";
+            return false;
         }
     }
 
@@ -218,18 +261,24 @@ class Automaton {
         finalStates = _finalStates;
         transitionMap = _transitionMap;
     }
+    Automaton() {}
 
     static string getNextState(
-        string initialState, string transitionInput,
+        bool verbose, string initialState, string transitionInput,
         map<pair<string, string>, string> transitionMap) {
         auto it = transitionMap.find({initialState, transitionInput});
 
         if (it != transitionMap.end()) {
-            cout << endl << "Estado Resultado: " << it->second << endl;
-            cout << "T(" << initialState << ", " << transitionInput
-                 << ") = " << it->second << endl;
+            if (verbose == true) {
+                cout << endl << "Estado Resultado: " << it->second << endl;
+                cout << "T(" << initialState << ", " << transitionInput
+                     << ") = " << it->second << endl;
+            }
+
         } else {
-            cout << endl << "[!] Transición no válida" << endl;
+            if (verbose == true) {
+                cout << endl << "[!] Transición no válida" << endl;
+            }
         }
 
         return it->second;
@@ -562,30 +611,15 @@ void loadAutomaton() {
     }
 }
 
-void executeAutomaton() {
-    int i, automatonChoice;
+void executeAutomaton(int automatonChoice) {
+    Automaton automaton = automata[automatonChoice];
+    automaton.printAtributes();
+    automaton.runAutomaton();
+}
 
-    if (automata.empty()) {
-        cout << endl
-             << "[!] Memoria vacía. Favor de crear o cargar autómata" << endl;
-    } else {
-        cout << endl << "--- { Autómatas disponibles } ---" << endl;
-        for (i = 0; i < automata.size(); i++) {
-            cout << "[" << i + 1 << "] " << automata[i].automatonName << endl;
-        }
-        cout << "Seleccione un autómata: ";
-        while (!(
-            (cin >> automatonChoice) &&
-            (automatonChoice >= 1 && automatonChoice < automata.size() + 1))) {
-            cin.clear();
-            cin.ignore();
-        }
-        automatonChoice--;
-
-        Automaton automaton = automata[automatonChoice];
-        automaton.printAtributes();
-        automaton.runAutomaton();
-    }
+void displayChains(int automatonChoice) {
+    Automaton automaton = automata[automatonChoice];
+    automaton.printChains();
 }
 
 void exportAutomaton() {
@@ -648,6 +682,10 @@ int main() {
     bool run = true;
     bool validString = false;
 
+    /* - Auxiliaries - */
+    int i, a, automatonChoice, methodChoice;
+    Automaton automaton;
+
     /* --------------------------- Code ---------------------------- */
     while (run == true) {
         diplayMenu();
@@ -666,7 +704,44 @@ int main() {
                 break;
 
             case 3:
-                executeAutomaton();
+
+                if (automata.empty()) {
+                    cout
+                        << endl
+                        << "[!] Memoria vacía. Favor de crear o cargar autómata"
+                        << endl;
+                } else {
+                    cout << endl << "--- { Autómatas disponibles } ---" << endl;
+                    for (i = 0; i < automata.size(); i++) {
+                        cout << "[" << i + 1 << "] "
+                             << automata[i].automatonName << endl;
+                    }
+                    cout << "Seleccione un autómata: ";
+                    while (!((cin >> automatonChoice) &&
+                             (automatonChoice >= 1 &&
+                              automatonChoice < automata.size() + 1))) {
+                        cin.clear();
+                        cin.ignore();
+                    }
+                    automatonChoice--;
+
+                    cout << endl
+                         << "Seleccione un método: " << endl
+                         << "[1] Verificar cadena" << endl
+                         << "[2] Mostrar cadenas posibles" << endl;
+                    while (!((cin >> methodChoice) &&
+                             (methodChoice >= 1 && methodChoice <= 2))) {
+                        cin.clear();
+                        cin.ignore();
+                    }
+
+                    if (methodChoice == 1) {
+                        executeAutomaton(automatonChoice);
+                    } else if (methodChoice == 2) {
+                        displayChains(automatonChoice);
+                    }
+                }
+
                 break;
 
             case 4:
