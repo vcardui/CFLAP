@@ -750,7 +750,7 @@ void exportAutomaton() {
         Automaton automaton = automata[automatonChoice];
 
         json automatonJSON;
-        automatonJSON["\"" + automaton.automatonName + "\""] = {
+        automatonJSON[automaton.automatonName] = {
             {{"automatonName", automaton.automatonName},
              {"posibleStates", automaton.posibleStates},
              {"alphabet", automaton.alphabet},
