@@ -1,5 +1,20 @@
 /*
-26 de septiembre de 2025
+ * +----------------------------------------------------------------------------+
+ * | CARDUI TECH v1.0.0
+ * +----------------------------------------------------------------------------+
+ * | Copyright (c) 2024 - 2025, CARDUITECH.COM (www.carduitech.com)
+ * | Vanessa Reteguín <vanessa@reteguin.com>
+ * | Released under the MIT license
+ * | www.carduitech.com/carduiframework/license/license.txt
+ * +----------------------------------------------------------
+ * | Author.......: Vanessa Reteguín <vanessa@reteguin.com>
+ * | First release: September 26th, 2025
+ * | Last update..: October 6th, 2025
+ * | WhatIs.......: CFLAP - Main
+ * +----------------------------------------------------------------------------+
+ */
+
+/*
 6 de octubre de 2025
 Vanessa Reteguín - 375533
 
@@ -55,6 +70,17 @@ Pista de la siguiente Etapa:
 - Función Generador de Cadenas que dado un Autómata Creado se muestren en
 consola cadenas aceptadas.
 
+Etapa 2
+
+Descripción: Modifique el código anterior que implemente un método
+GenerarPalabras o GeneradorCadeneas que reciba una estructura Autómata
+(Ya sea AFD o AFND) y sea capaz de desplegar las cadenas aceptadas.
+
+Requerimientos:
+-El usuario puede construir un Autómata mediante la etapa 1.
+-La función GeneradorCadenas debe generar frases que recorran TODOS los
+estados válidos del autómata.
+
 */
 
 /* ------------ Resources / Documentation involved ------------- */
@@ -67,9 +93,14 @@ consola cadenas aceptadas.
 // nlohmann JSON C++ Include issue:
 // https://stackoverflow.com/questions/51707031/nlohmann-json-c-include-issue?rq=4
 
+// [3] Alphabets And Permutations:
+// https://github.com/vcardui/AlphabetsAndPermutations
+// Homemade non-recursive permutations function
+
 /* ------------------------- Libraries ------------------------- */
 #include <fstream>  /* ifstream */
 #include <iostream> /* cin/cout */
+#include <list>
 #include <map>
 #include <nlohmann/json.hpp> /* [2] JSON files manipulation */
 #include <sstream>           /* [1] stringstream tokenizer*/
@@ -212,12 +243,48 @@ class Automaton {
     void printChains() {
         /* Auxiliaries */
         int i, j;
+        string currentPermutation;
         string fullstring;
 
+        vector<string> permutations;
+        int validStrings = 0, totalPermutations = 0;
+
+        printAtributes();
+
         for (i = 0; i < alphabet.size(); i++) {
-            fullstring = alphabet[i];
-            cout << fullstring << ": " << validChain(fullstring) << endl;
+            permutations.push_back(alphabet[i]);
         }
+
+        // [3] Homemade non-recursive permutations function
+        for (i = 0; i <= (pow(alphabet.size(), alphabet.size()) - 1); i++) {
+            currentPermutation = "";
+            currentPermutation = decimalToNBase(i, alphabet.size(), alphabet);
+
+            permutations.push_back(currentPermutation);
+        }
+
+        for (i = 0; i <= (pow(permutations.size(), permutations.size()) - 1);
+             i++) {
+            currentPermutation = "";
+            currentPermutation =
+                decimalToNBase(i, permutations.size(), permutations);
+
+            // cout << currentPermutation << ": " <<
+            // validChain(currentPermutation)
+            //     << endl;
+
+            if (validChain(currentPermutation)) {
+                validStrings++;
+                cout << "[" << validStrings << "] " << currentPermutation
+                     << endl;
+            }
+
+            totalPermutations++;
+        }
+
+        cout << endl
+             << "[*] Mostrando " << validStrings << " cadenas válidas de "
+             << totalPermutations << " permutaciones totales generadas" << endl;
     }
 
     bool validChain(string fullstring) {
@@ -282,6 +349,44 @@ class Automaton {
         }
 
         return it->second;
+    }
+
+    static string decimalToNBase(int decimalNum, int base,
+                                 vector<string> digits) {
+        string result = "";
+        list<string> reverseResultList;
+
+        int i;
+
+        // vector<string> digits = {"0", "1", "2", "3", "4", "5", "6", "7", "8",
+        // "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+        // "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
+
+        if (decimalNum <= 1) {
+            reverseResultList.push_front(digits[0]);
+        }
+
+        if (decimalNum == 0) {
+            reverseResultList.push_front(digits[0]);
+        }
+
+        while (decimalNum > 0) {
+            int remainder = decimalNum % base;
+            // result += digits[remainder];
+            reverseResultList.push_front(digits[remainder]);
+            decimalNum /= base;
+        }
+
+        list<string>::iterator iter;
+
+        if ((iter = reverseResultList.begin()) != reverseResultList.end()) {
+            for (i = 0; i < reverseResultList.size(); ++i) {
+                result += *iter;
+                ++iter;
+            }
+        }
+
+        return result;
     }
 };
 
