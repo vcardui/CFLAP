@@ -9,7 +9,7 @@
  * +----------------------------------------------------------
  * | Author.......: Vanessa Reteguín <vanessa@reteguin.com>
  * | First release: September 26th, 2025
- * | Last update..: October 6th, 2025
+ * | Last update..: October 9th, 2025
  * | WhatIs.......: CFLAP - Main
  * +----------------------------------------------------------------------------+
  */
@@ -139,7 +139,7 @@ class Automaton {
     vector<string> alphabet;
     string initialState;
     vector<string> finalStates;
-    map<pair<string, string>, string> transitionMap;
+    map<pair<string, string>, vector<string>> transitionMap;
 
     void printAtributes() {
         int i;
@@ -178,8 +178,11 @@ class Automaton {
 
         for (auto transition : transitionMap) {
             cout << "    T(" << transition.first.first << ", "
-                 << transition.first.second << ") = " << transition.second
-                 << endl;
+                 << transition.first.second << ") = ";
+            for (auto element : transition.second) {
+                cout << element << " ";
+            }
+            cout << endl;
         }
 
         cout << "---------------------------------------------------------"
@@ -192,8 +195,10 @@ class Automaton {
 
         string currentCharacter;
         string automatonInput;
-        string nextState;
+        vector<string> nextState;
         string currentByte;
+
+        bool validChain = true;
 
         /* - Validators - */
         bool validString = false;
@@ -219,9 +224,9 @@ class Automaton {
         }
 
         cout << endl << "[*] Cadena válida" << endl;
-        nextState = initialState;
+        nextState.push_back(initialState);
 
-        cout << endl << "[*] Estado inicial: " << nextState << endl;
+        cout << endl << "[*] Estado inicial: " << nextState[0] << endl;
 
         for (i = 0; i < automatonInput.length(); i++) {
             currentByte = automatonInput[i];
@@ -229,14 +234,26 @@ class Automaton {
                 getNextState(true, nextState, currentByte, transitionMap);
         }
 
-        auto it = find(finalStates.begin(), finalStates.end(), nextState);
+        for (auto state : nextState) {
+            auto it = find(finalStates.begin(), finalStates.end(), state);
 
-        if (it != finalStates.end()) {
-            cout << endl << "[*] Estado final: " << nextState << endl;
+            if (it != finalStates.end()) {
+                cout << endl << "[*] Estado final: " << state;
+                cout << endl;
+            } else {
+                cout << endl << "[!] Estado final no válido: " << state << endl;
+                cout << endl << "[!] Cadena no válida";
+                validChain = false;
+                break;
+            }
+        }
+
+        cout << endl << "\n\n###### Resultado final ######";
+        cout << endl << "Cadena: " << automatonInput;
+        if (validChain == false) {
+            cout << " NO es válida [X]";
         } else {
-            cout << endl
-                 << "[!] Estado final no válido: " << nextState << endl
-                 << "[!] Cadena no válida";
+            cout << " es válida [✓]";
         }
     }
 
@@ -288,13 +305,14 @@ class Automaton {
     }
 
     bool validChain(string fullstring) {
-        string nextState;
+        vector<string> nextState;
         string currentByte;
         int i;
+        bool validChain = true;
 
         // cout << "[" << fullstring << "]" << endl;
 
-        nextState = initialState;
+        nextState.push_back(initialState);
 
         // cout << endl << "[*] Estado inicial: " << nextState << endl;
 
@@ -304,23 +322,27 @@ class Automaton {
                 getNextState(false, nextState, currentByte, transitionMap);
         }
 
-        auto it = find(finalStates.begin(), finalStates.end(), nextState);
+        for (auto state : nextState) {
+            auto it = find(finalStates.begin(), finalStates.end(), state);
 
-        if (it != finalStates.end()) {
-            // cout << endl << "[*] Estado final: " << nextState << endl;
-            return true;
-        } else {
-            // cout << endl
-            //     << "[!] Estado final no válido: " << nextState << endl
-            //     << "[!] Cadena no válida";
-            return false;
+            if (it != finalStates.end()) {
+                // cout << endl << "[*] Estado final: " << state << endl;
+                // return true;
+            } else {
+                // cout << endl
+                //     << "[!] Estado final no válido: " << state << endl
+                //     << "[!] Cadena no válida";
+                validChain = false;
+            }
         }
+
+        return validChain;
     }
 
     Automaton(string _automatonName, vector<string> _posibleStates,
               vector<string> _alphabet, string _initialState,
               vector<string> _finalStates,
-              map<pair<string, string>, string> _transitionMap) {
+              map<pair<string, string>, vector<string>> _transitionMap) {
         automatonName = _automatonName;
         posibleStates = _posibleStates;
         alphabet = _alphabet;
@@ -330,25 +352,38 @@ class Automaton {
     }
     Automaton() {}
 
-    static string getNextState(
-        bool verbose, string initialState, string transitionInput,
-        map<pair<string, string>, string> transitionMap) {
-        auto it = transitionMap.find({initialState, transitionInput});
+    static vector<string> getNextState(
+        bool verbose, vector<string> initialState, string transitionInput,
+        map<pair<string, string>, vector<string>> transitionMap) {
+        vector<string> nextState;
 
-        if (it != transitionMap.end()) {
-            if (verbose == true) {
-                cout << endl << "Estado Resultado: " << it->second << endl;
-                cout << "T(" << initialState << ", " << transitionInput
-                     << ") = " << it->second << endl;
-            }
+        for (auto element : initialState) {
+            auto it = transitionMap.find({element, transitionInput});
 
-        } else {
-            if (verbose == true) {
-                cout << endl << "[!] Transición no válida" << endl;
+            if (it != transitionMap.end()) {
+                if (verbose == true) {
+                    cout << endl << "Estado Resultado: ";
+                    for (auto state : it->second) {
+                        cout << state << " ";
+                    }
+                    cout << endl;
+
+                    cout << "T(" << element << ", " << transitionInput
+                         << ") = ";
+                    for (auto state : it->second) {
+                        cout << state << " ";
+                        nextState.push_back(state);
+                    }
+                    cout << endl;
+                }
+            } else {
+                if (verbose == true) {
+                    cout << endl << "[!] Transición no válida" << endl;
+                }
             }
         }
 
-        return it->second;
+        return nextState;
     }
 
     static string decimalToNBase(int decimalNum, int base,
@@ -396,6 +431,7 @@ vector<Automaton> automata;
 void getAutomaton() {
     /* - Auxiliaries - */
     int i;
+    vector<string> resultTransitions;
 
     /* - Tokenize the input - */
     // [1] Using stringstream to tokenize the input based on the
@@ -420,7 +456,7 @@ void getAutomaton() {
     vector<string> finalStates;
     string addNewQuestion;
 
-    map<pair<string, string>, string> transitionMap = {};
+    map<pair<string, string>, vector<string>> transitionMap = {};
     string transitionInput;
 
     // States
@@ -622,13 +658,20 @@ void getAutomaton() {
                 cout << "):" << endl;
             }
 
-            transitionMap.insert({{initialState, transitionInput}, finalState});
+            vector<string> temp;
+            temp.push_back(finalState);
+
+            transitionMap.insert({{initialState, transitionInput}, temp});
 
             cout << endl
                  << "[*] Transición registrada: " << "T(" << initialState
-                 << ", " << transitionInput
-                 << ") = " << transitionMap.at({initialState, transitionInput})
-                 << endl;
+                 << ", " << transitionInput << ") = ";
+
+            for (auto transition :
+                 transitionMap.at({initialState, transitionInput})) {
+                cout << transition << " ";
+            }
+            cout << endl;
 
             i++;
 
@@ -664,7 +707,7 @@ void loadAutomaton() {
     vector<string> alphabet;
     string initialState;
     vector<string> finalStates;
-    map<pair<string, string>, string> transitionMap;
+    map<pair<string, string>, vector<string>> transitionMap;
 
     vector<string> existingAutomata;
 
