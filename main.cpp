@@ -9,7 +9,7 @@
  * +----------------------------------------------------------
  * | Author.......: Vanessa Reteguín <vanessa@reteguin.com>
  * | First release: September 26th, 2025
- * | Last update..: October 9th, 2025
+ * | Last update..: October 10th, 2025
  * | WhatIs.......: CFLAP - Main
  * +----------------------------------------------------------------------------+
  */
@@ -120,8 +120,9 @@ void diplayMenu() {
             "\n| [1] Crear autómata    |"
             "\n| [2] Cargar autómata   |"
             "\n| [3] Ejecutar autómata |"
-            "\n| [4] Exportar autómata |"
-            "\n|             [5] Salir |"
+            "\n| [4] Editar autómata   |"
+            "\n| [5] Exportar autómata |"
+            "\n|             [6] Salir |"
             "\n.-----------------------.\n";
 }
 
@@ -141,13 +142,20 @@ class Automaton {
     vector<string> finalStates;
     map<pair<string, string>, vector<string>> transitionMap;
 
-    void printAtributes() {
+    void printNumberedPosibleStates() {
         int i;
+        cout << endl << "Conjunto de Estados Posibles:" << endl;
+        for (i = 0; i < posibleStates.size(); i++) {
+            if (i != 0) {
+                cout << ", ";
+            }
+            cout << posibleStates[i];
+        }
+        cout << "}";
+    }
 
-        cout << endl
-             << "-------------------<{ " << automatonName
-             << " }>-------------------";
-        cout << endl << "A = (Q, Σ, δ, s, F)";
+    void printPosibleStates() {
+        int i;
         cout << endl << "Conjunto de Estados Posibles  Q: {";
         for (i = 0; i < posibleStates.size(); i++) {
             if (i != 0) {
@@ -156,6 +164,10 @@ class Automaton {
             cout << posibleStates[i];
         }
         cout << "}";
+    }
+
+    void printAlphabet() {
+        int i;
         cout << endl << "Alfabeto                      Σ: {";
         for (i = 0; i < alphabet.size(); i++) {
             if (i != 0) {
@@ -164,7 +176,14 @@ class Automaton {
             cout << alphabet[i];
         }
         cout << "}";
+    }
+
+    void printInitialState() {
         cout << endl << "Estado Inicial                s: " << initialState;
+    }
+
+    void printFinalStates() {
+        int i;
         cout << endl << "Conjunto de Estados finales   F: {";
         for (i = 0; i < finalStates.size(); i++) {
             if (i != 0) {
@@ -173,7 +192,9 @@ class Automaton {
             cout << finalStates[i];
         }
         cout << "}";
+    }
 
+    void printTransitionMap() {
         cout << endl << "Funciones de transición       𝜹:" << endl;
 
         for (auto transition : transitionMap) {
@@ -184,6 +205,25 @@ class Automaton {
             }
             cout << endl;
         }
+    }
+
+    void printAtributes() {
+        int i;
+
+        cout << endl
+             << "-------------------<{ " << automatonName
+             << " }>-------------------";
+        cout << endl << "A = (Q, Σ, δ, s, F)";
+
+        printPosibleStates();
+
+        printAlphabet();
+
+        printInitialState();
+
+        printFinalStates();
+
+        printTransitionMap();
 
         cout << "---------------------------------------------------------"
              << endl;
@@ -770,8 +810,365 @@ void displayChains(int automatonChoice) {
     automaton.printChains();
 }
 
+void editAutomaton() {
+    int i, automatonChoice, atributeChoice, tempChoice;
+
+    string delimiter = ",";
+    string token;
+
+    /* - Store automaton attributes - */
+    string automatonName;
+
+    string posibleStatesInput;
+    vector<string> posibleStates;
+
+    string alphabetInput;
+    vector<string> alphabet;
+
+    string initialState;
+    string finalState;
+
+    string tempState;
+    vector<string> tempPosibleStates;
+    vector<string> finalStates;
+    string addNewQuestion;
+
+    map<pair<string, string>, vector<string>> transitionMap = {};
+    string transitionInput;
+
+    if (automata.empty()) {
+        cout << endl
+             << "[!] Memoria vacía. Favor de crear o cargar autómata" << endl;
+    } else {
+        cout << endl << "--- { Autómatas disponibles } ---" << endl;
+        for (i = 0; i < automata.size(); i++) {
+            cout << "[" << i + 1 << "] " << automata[i].automatonName << endl;
+        }
+        cout << "Seleccione un autómata: ";
+        while (!(
+            (cin >> automatonChoice) &&
+            (automatonChoice >= 1 && automatonChoice < automata.size() + 1))) {
+            cin.clear();
+            cin.ignore();
+        }
+        automatonChoice--;
+
+        Automaton automaton = automata[automatonChoice];
+
+        automaton.printAtributes();
+
+        cout << "Seleccione un atributo a editar del autómata: " << endl;
+        cout << "[1] Conjunto de Estados Posibles" << endl
+             << "[2] Alfabeto" << endl
+             << "[3] Estado Inicial" << endl
+             << "[4] Conjunto de Estados finales" << endl
+             << "[5] Funciones de transición" << endl
+             << "[6] Nombre del autómata" << endl;
+        while (!((cin >> atributeChoice) &&
+                 (atributeChoice >= 1 && atributeChoice <= 5))) {
+            cin.clear();
+            cin.ignore();
+        }
+
+        switch (atributeChoice) {
+            case 1: {
+                automaton.printPosibleStates();
+
+                // States
+                cout << endl
+                     << "Ingrese el Conjunto de Estados Posibles separados "
+                        "por ',' "
+                        "(q1,q2,q3):"
+                     << endl;
+                getline(cin >> ws, posibleStatesInput);
+
+                cout << endl << "[*] Estados registrados: ";
+                stringstream ssPosibleStates(posibleStatesInput);  // [1]
+                while (getline(ssPosibleStates, token, delimiter[0])) {
+                    token.erase(
+                        remove_if(token.begin(), token.end(), ::isspace),
+                        token.end());
+                    posibleStates.push_back(token);
+                    cout << token << " ";
+                }
+                cout << endl;
+
+                automaton.posibleStates = posibleStates;
+            } break;
+            case 2: {
+                automaton.printAlphabet();
+
+                // Alphabet
+                cout << endl
+                     << "Ingrese elementos del alfabeto separados por ',' "
+                        "(a,1,b):"
+                     << endl;
+                getline(cin >> ws, alphabetInput);
+
+                cout << endl << "[*] Alfabeto registrado: ";
+                stringstream ssAlphabet(alphabetInput);  // [1]
+                while (getline(ssAlphabet, token, delimiter[0])) {
+                    token.erase(
+                        remove_if(token.begin(), token.end(), ::isspace),
+                        token.end());
+                    alphabet.push_back(token);
+                    cout << token << " ";
+                }
+                cout << endl;
+
+                automaton.alphabet = alphabet;
+            } break;
+
+            case 3:
+                automaton.printInitialState();
+
+                // Initial state
+                cout << endl << "Seleccione un estado inicial (";
+                for (i = 0; i < posibleStates.size(); i++) {
+                    if (i != 0) {
+                        cout << ", ";
+                    }
+                    cout << posibleStates[i];
+                }
+                cout << "):" << endl;
+                while ((cin >> initialState) &&
+                       !(find(posibleStates.begin(), posibleStates.end(),
+                              initialState) != posibleStates.end())) {
+                    cin.clear();
+                    cin.ignore();
+
+                    cout << endl << "Seleccione un estado inicial (";
+                    for (i = 0; i < posibleStates.size(); i++) {
+                        if (i != 0) {
+                            cout << ", ";
+                        }
+                        cout << posibleStates[i];
+                    }
+                    cout << "):" << endl;
+                }
+
+                cout << endl
+                     << "[*] Estado inicial registrado: " << initialState
+                     << endl;
+
+                automaton.initialState = initialState;
+                break;
+
+            case 4:
+                automaton.printFinalStates();
+
+                // Final state
+                tempPosibleStates = posibleStates;
+                addNewQuestion = "si";
+
+                while (!(tempPosibleStates.empty()) &&
+                       (addNewQuestion == "si" || addNewQuestion == "Si")) {
+                    cout << endl << "Seleccione un(los) estado(s) final(es) (";
+                    for (i = 0; i < tempPosibleStates.size(); i++) {
+                        if (i != 0) {
+                            cout << ", ";
+                        }
+                        cout << tempPosibleStates[i];
+                    }
+                    cout << "):" << endl;
+                    while ((cin >> tempState) &&
+                           !(find(tempPosibleStates.begin(),
+                                  tempPosibleStates.end(),
+                                  tempState) != tempPosibleStates.end())) {
+                        cin.clear();
+                        cin.ignore();
+
+                        cout << endl
+                             << "Seleccione un(los) estado(s) final(es) (";
+                        for (i = 0; i < tempPosibleStates.size(); i++) {
+                            if (i != 0) {
+                                cout << ", ";
+                            }
+                            cout << tempPosibleStates[i];
+                        }
+                        cout << "):" << endl;
+                    }
+
+                    finalStates.push_back(tempState);
+                    tempPosibleStates.erase(find(tempPosibleStates.begin(),
+                                                 tempPosibleStates.end(),
+                                                 tempState));
+                    cout << endl
+                         << "[*] Estado final registrado: " << tempState
+                         << endl;
+
+                    if (!(tempPosibleStates.empty())) {
+                        cout << endl
+                             << "¿Desea agregar un nuevo estado final? "
+                                "(si/no): ";
+                        while ((cin >> addNewQuestion) &&
+                               !((addNewQuestion == "si") ||
+                                 (addNewQuestion == "no") ||
+                                 (addNewQuestion == "Si") ||
+                                 (addNewQuestion == "No"))) {
+                            cin.clear();
+                            cin.ignore();
+                        }
+                    }
+                }
+
+                cout << endl << "[*] Estados finales registrados: ";
+                for (i = 0; i < finalStates.size(); i++) {
+                    cout << finalStates[i] << " ";
+                }
+
+                automaton.finalStates = finalStates;
+                break;
+
+            case 5:
+                automaton.printTransitionMap();
+
+                // Transitions
+                cout << endl
+                     << "---> Ingrese las funciones de transición del autómata "
+                        "<---";
+                addNewQuestion = "si";
+                while (addNewQuestion == "si" || addNewQuestion == "Si") {
+                    i = 1;
+                    cout << endl << "     Transición #" << i << endl;
+
+                    cout << endl << "Seleccione un estado inicial (";
+                    for (i = 0; i < posibleStates.size(); i++) {
+                        if (i != 0) {
+                            cout << ", ";
+                        }
+                        cout << posibleStates[i];
+                    }
+                    cout << "):" << endl;
+                    while ((cin >> initialState) &&
+                           !(find(posibleStates.begin(), posibleStates.end(),
+                                  initialState) != posibleStates.end())) {
+                        cin.clear();
+                        cin.ignore();
+
+                        cout << endl << "Seleccione un estado inicial (";
+                        for (i = 0; i < posibleStates.size(); i++) {
+                            if (i != 0) {
+                                cout << ", ";
+                            }
+                            cout << posibleStates[i];
+                        }
+                        cout << "):" << endl;
+                    }
+
+                    cin.clear();
+                    cin.ignore();
+
+                    // [BUG: 29/sep/2025]: Elemento no se captura hasta obtener
+                    // una segunda entrada
+
+                    // [To Do] Editar para usar do while
+                    cout << endl << "Seleccione un elemento del alfabeto (";
+                    for (i = 0; i < alphabet.size(); i++) {
+                        if (i != 0) {
+                            cout << ", ";
+                        }
+                        cout << alphabet[i];
+                    }
+                    cout << "):" << endl;
+                    while ((cin >> transitionInput) &&
+                           !(find(alphabet.begin(), alphabet.end(),
+                                  transitionInput) != alphabet.end())) {
+                        cin.clear();
+                        cin.ignore();
+
+                        cout << endl << "Seleccione un elemento del alfabeto (";
+                        for (i = 0; i < alphabet.size(); i++) {
+                            if (i != 0) {
+                                cout << ", ";
+                            }
+                            cout << alphabet[i];
+                        }
+                        cout << "):" << endl;
+                    }
+
+                    auto it =
+                        transitionMap.find({initialState, transitionInput});
+
+                    if (it != transitionMap.end()) {
+                        cout << endl
+                             << "[!] Transición ya registrada. Por favor "
+                                "ingrese una "
+                                "diferente"
+                             << endl;
+                    } else {
+                        while (
+                            (cin >> finalState) &&
+                            !(find(posibleStates.begin(), posibleStates.end(),
+                                   finalState) != posibleStates.end())) {
+                            cin.clear();
+                            cin.ignore();
+
+                            cout << endl << "Seleccione el estado siguiente (";
+                            for (i = 0; i < posibleStates.size(); i++) {
+                                if (i != 0) {
+                                    cout << ", ";
+                                }
+                                cout << posibleStates[i];
+                            }
+                            cout << "):" << endl;
+                        }
+
+                        vector<string> temp;
+                        temp.push_back(finalState);
+
+                        transitionMap.insert(
+                            {{initialState, transitionInput}, temp});
+
+                        cout << endl
+                             << "[*] Transición registrada: " << "T("
+                             << initialState << ", " << transitionInput
+                             << ") = ";
+
+                        for (auto transition : transitionMap.at(
+                                 {initialState, transitionInput})) {
+                            cout << transition << " ";
+                        }
+                        cout << endl;
+
+                        i++;
+
+                        cout
+                            << endl
+                            << "¿Desea agregar una nueva transición? (si/no): ";
+                        while ((cin >> addNewQuestion) &&
+                               !((addNewQuestion == "si") ||
+                                 (addNewQuestion == "no") ||
+                                 (addNewQuestion == "Si") ||
+                                 (addNewQuestion == "No"))) {
+                            cin.clear();
+                            cin.ignore();
+                        }
+                    }
+                }
+                break;
+            case 6:
+                // Name
+                cout << endl
+                     << "Ingrese el nombre o identificador del autómata: "
+                     << endl;
+                cin >> automatonName;
+
+                automaton.automatonName = automatonName;
+                break;
+
+            default:
+                break;
+        }
+
+        cout << endl << "### Autómata actualizado ###" << endl;
+        automaton.printAtributes();
+    }
+}
+
 void exportAutomaton() {
     int i, automatonChoice;
+    string filename;
 
     if (automata.empty()) {
         cout << endl
@@ -805,7 +1202,11 @@ void exportAutomaton() {
             cout << item.key() << " : " << item.value();
         }
 
-        std::ofstream outputFile("output.json");
+        cout << endl
+             << "Ingrese el nombre o identificador del autómata: " << endl;
+        cin >> filename;
+
+        std::ofstream outputFile(filename + ".json");
 
         // 3. Check if the file was opened successfully
         if (outputFile.is_open()) {
@@ -816,7 +1217,13 @@ void exportAutomaton() {
             outputFile.close();
             // std::cout << "JSON data successfully saved to output.json" <<
             // std::endl; // Optional: for user feedback
+
+            cout << "### Autómata exportado exitosamente ###" << endl
+                 << "[*] Acceda al archivo " << filename
+                 << ".json generado en el directorio de este programa para "
+                    "visualizarlo";
         } else {
+            cout << endl << "[!] Error al escribir dentro del archivo" << endl;
             // std::cerr << "Error: Unable to open file for writing." <<
             // std::endl; // Optional: for error handling
         }
@@ -837,7 +1244,7 @@ int main() {
     /* --------------------------- Code ---------------------------- */
     while (run == true) {
         diplayMenu();
-        while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 5))) {
+        while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 6))) {
             cin.clear();
             cin.ignore();
         }
@@ -891,12 +1298,15 @@ int main() {
                 }
 
                 break;
-
             case 4:
-                exportAutomaton();
+                editAutomaton();
                 break;
 
             case 5:
+                exportAutomaton();
+                break;
+
+            case 6:
                 endTitle();
                 run = false;
                 break;
