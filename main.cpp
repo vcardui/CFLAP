@@ -9,13 +9,13 @@
  * +----------------------------------------------------------
  * | Author.......: Vanessa Reteguín <vanessa@reteguin.com>
  * | First release: September 26th, 2025
- * | Last update..: October 10th, 2025
+ * | Last update..: October 14th, 2025
  * | WhatIs.......: CFLAP - Main
  * +----------------------------------------------------------------------------+
  */
 
 /*
-6 de octubre de 2025
+14 de octubre de 2025
 Vanessa Reteguín - 375533
 
 Actividad 8: Práctica para AFND
@@ -142,18 +142,6 @@ class Automaton {
     vector<string> finalStates;
     map<pair<string, string>, vector<string>> transitionMap;
 
-    void printNumberedPosibleStates() {
-        int i;
-        cout << endl << "Conjunto de Estados Posibles:" << endl;
-        for (i = 0; i < posibleStates.size(); i++) {
-            if (i != 0) {
-                cout << ", ";
-            }
-            cout << posibleStates[i];
-        }
-        cout << "}";
-    }
-
     void printPosibleStates() {
         int i;
         cout << endl << "Conjunto de Estados Posibles  Q: {";
@@ -195,6 +183,7 @@ class Automaton {
     }
 
     void printTransitionMap() {
+        bool AFND = false;
         cout << endl << "Funciones de transición       𝜹:" << endl;
 
         for (auto transition : transitionMap) {
@@ -203,7 +192,21 @@ class Automaton {
             for (auto element : transition.second) {
                 cout << element << " ";
             }
+            if (transition.second.size() > 1) {
+                AFND = true;
+            }
             cout << endl;
+        }
+
+        cout << "               Tipo de autómata: ";
+        if (AFND) {
+            cout << "Autómata Finito\n                                 No "
+                    "Determinístico (AFND)"
+                 << endl;
+        } else {
+            cout << "Autómata Finito\n                                 "
+                    "Determinístico (AFD)"
+                 << endl;
         }
     }
 
@@ -836,6 +839,10 @@ void editAutomaton() {
     map<pair<string, string>, vector<string>> transitionMap = {};
     string transitionInput;
 
+    vector<pair<int, pair<string, string>>> indexTransitionMap;
+    int elementToDelete;
+    string youSure;
+
     if (automata.empty()) {
         cout << endl
              << "[!] Memoria vacía. Favor de crear o cargar autómata" << endl;
@@ -863,9 +870,10 @@ void editAutomaton() {
              << "[3] Estado Inicial" << endl
              << "[4] Conjunto de Estados finales" << endl
              << "[5] Funciones de transición" << endl
-             << "[6] Nombre del autómata" << endl;
+             << "[6] Eliminar función de transición" << endl
+             << "[7] Nombre del autómata" << endl;
         while (!((cin >> atributeChoice) &&
-                 (atributeChoice >= 1 && atributeChoice <= 5))) {
+                 (atributeChoice >= 1 && atributeChoice <= 7))) {
             cin.clear();
             cin.ignore();
         }
@@ -1148,6 +1156,44 @@ void editAutomaton() {
                 }
                 break;
             case 6:
+                i = 0;
+                for (auto transition : automaton.transitionMap) {
+                    cout << "    [" << i << "] T(" << transition.first.first
+                         << ", " << transition.first.second << ") = ";
+                    indexTransitionMap.push_back(
+                        make_pair(i, make_pair(transition.first.first,
+                                               transition.first.second)));
+                    i++;
+                    for (auto element : transition.second) {
+                        cout << element << " ";
+                    }
+                    cout << endl;
+                }
+                cin >> elementToDelete;
+                cout << "¿Está seguro de que quiere eliminar el elemento ["
+                     << elementToDelete << "] " << "T("
+                     << indexTransitionMap[elementToDelete].second.first << ", "
+                     << indexTransitionMap[elementToDelete].second.second
+                     << ") = ";
+                for (auto element : automaton.transitionMap.at(
+                         indexTransitionMap[elementToDelete].second)) {
+                    cout << element << " ";
+                }
+                cout << "? [si/no]" << endl;
+                while ((cin >> youSure) &&
+                       !((youSure == "si") || (youSure == "Si") ||
+                         (youSure == "no") || (youSure == "No"))) {
+                    cin.clear();
+                    cin.ignore();
+                }
+
+                if (youSure == "si" || youSure == "Si") {
+                    automaton.transitionMap.erase(
+                        indexTransitionMap[elementToDelete].second);
+                    cout << endl << "[*] Elemento borrado exitosmanete" << endl;
+                }
+                break;
+            case 7:
                 // Name
                 cout << endl
                      << "Ingrese el nombre o identificador del autómata: "
