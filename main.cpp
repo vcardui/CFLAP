@@ -9,7 +9,7 @@
  * +----------------------------------------------------------
  * | Author.......: Vanessa Reteguín <vanessa@reteguin.com>
  * | First release: September 26th, 2025
- * | Last update..: October 14th, 2025
+ * | Last update..: November 29th, 2025
  * | WhatIs.......: CFLAP - Main
  * +----------------------------------------------------------------------------+
  */
@@ -111,8 +111,32 @@ using namespace std;
 using json = nlohmann::json;
 
 /* ------------------------- Functions ------------------------- */
+void diplayMainMenu() {
+    cout << endl
+         << "\n.---------------------------."
+            "\n||     -{ MAIN MENU }-     ||"
+            "\n.---------------------------."
+            "\n| [1] Autómatas de pila     |"
+            "\n| [2] Autómatas             |"
+            "\n|     finitos deterministas |"
+            "\n|     y no deterministas    |"
+            "\n|                 [3] Salir |"
+            "\n.---------------------------.\n";
+}
 
-void diplayMenu() {
+void diplay_PDA_TuringMachine_Menu() {
+    cout << endl
+         << "\n.----------------------------------."
+            "\n|| -{ PDA y Máquinas de turing }- ||"
+            "\n.----------------------------------."
+            "\n| [1] Autómata de pila 1           |"
+            "\n| [2] Autómata de pila 2           |"
+            "\n| [3] Máquina de turing            |"
+            "\n|                        [4] Salir |"
+            "\n.----------------------------------.\n";
+}
+
+void diplay_AFD_AFND_Menu() {
     cout << endl
          << "\n.-----------------------."
             "\n||     -{ MENU }-      ||"
@@ -1282,7 +1306,7 @@ void exportAutomaton() {
     }
 }
 
-int main() {
+void AFD_AFND_manager() {
     /* ------------------------- Variables ------------------------- */
     /* - Menu - */
     int userChoice;
@@ -1295,7 +1319,7 @@ int main() {
 
     /* --------------------------- Code ---------------------------- */
     while (run == true) {
-        diplayMenu();
+        diplay_AFD_AFND_Menu();
         while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 6))) {
             cin.clear();
             cin.ignore();
@@ -1359,6 +1383,249 @@ int main() {
                 break;
 
             case 6:
+                endTitle();
+                run = false;
+                break;
+        }
+    }
+}
+
+class PushdownAutomaton {
+   public:
+    string automatonName;
+
+    vector<string> posibleStates;  // Q
+    vector<string> alphabet;       // Σ
+    vector<string> stackAlphabet;  // Γ
+    map<tuple<string, string, string>, pair<string, vector<string>>>
+        transitionMap;  // δ
+
+    string startState;           // q0
+    string stackStartSymbol;     // Z0
+    vector<string> finalStates;  // F
+
+    stack<string> theStack;  // Stack
+
+    PushdownAutomaton(
+        string _automatonName, vector<string> _posibleStates,
+        vector<string> _alphabet, vector<string> _stackAlphabet,
+        map<tuple<string, string, string>, pair<string, vector<string>>>
+            _transitionMap,
+        string _startState, string _stackStartSymbol,
+        vector<string> _finalStates) {
+        automatonName = _automatonName;
+        posibleStates = _posibleStates;
+        alphabet = _alphabet;
+        stackAlphabet = _stackAlphabet;
+        transitionMap = _transitionMap;
+        startState = _startState;
+        stackStartSymbol = _stackStartSymbol;
+        finalStates = _finalStates;
+    }
+
+    void runAutomaton() {
+        /* - Auxiliaries - */
+        int i;
+
+        string currentCharacter;
+        string automatonInput;
+        vector<string> nextState;
+        string currentByte;
+
+        bool validChain = true;
+
+        /* - Validators - */
+        bool validString = false;
+
+        while (validString == false) {
+            cout << "Ingrese una cadena: ";
+            cin >> automatonInput;
+
+            for (int i = 0; i < automatonInput.length(); i++) {
+                currentCharacter = automatonInput[i];
+                auto it =
+                    find(alphabet.begin(), alphabet.end(), currentCharacter);
+
+                if (it != alphabet.end()) {
+                    validString = true;
+                } else {
+                    cout << endl << "    [!] Cadena no válida\n" << endl;
+                    validString = false;
+                    break;
+                }
+            }
+            validString = true;
+        }
+
+        cout << endl << "[*] Cadena válida" << endl;
+        nextState.push_back(startState);
+
+        cout << endl << "[*] Estado inicial: " << nextState[0] << endl;
+
+        for (i = 0; i < automatonInput.length(); i++) {
+            currentByte = automatonInput[i];
+            nextState = getNextPDAState(true, nextState, currentByte,
+                                        transitionMap, theStack);
+        }
+
+        for (auto state : nextState) {
+            auto it = find(finalStates.begin(), finalStates.end(), state);
+
+            if (it != finalStates.end()) {
+                cout << endl << "[*] Estado final: " << state;
+                cout << endl;
+            } else {
+                cout << endl << "[!] Estado final no válido: " << state << endl;
+                cout << endl << "[!] Cadena no válida";
+                validChain = false;
+                break;
+            }
+        }
+
+        cout << endl << "\n\n###### Resultado final ######";
+        cout << endl << "Cadena: " << automatonInput;
+        if (validChain == false) {
+            cout << " NO es válida [X]";
+        } else {
+            cout << " es válida [✓]";
+        }
+    }
+
+    static vector<string> getNextPDAState(
+        bool verbose, vector<string> initialState, string transitionInput,
+        map<tuple<string, string, string>, pair<string, vector<string>>>
+            transitionMap,
+        stack<string> theStack) {
+        vector<string> nextState;
+
+        for (auto currentState : initialState) {
+            for (auto element : transitionMap) {
+                if ((currentState == get<0>(element.first)) &&
+                    (transitionInput == get<1>(element.first)) &&
+                    (theStack.top() == get<2>(element.first))) {
+                    cout << "found!" << endl;
+
+                    nextState.push_back(element.second.first);
+                    cout << "siguiente estado: " << nextState.front() << endl;
+
+                    if (element.second.second[0] == "_") {
+                        theStack.pop();
+                    } else {
+                        for (auto i : element.second.second) {
+                            theStack.push(i);
+                        }
+                    }
+                } else {
+                    if (verbose == true) {
+                        cout << endl << "[!] Transición no válida" << endl;
+                    }
+                }
+            }
+        }
+
+        return nextState;
+    }
+};
+
+void PDA1() {
+    string automatonName =
+        "Prueba #1: Geeks for geeks - Introduction of Pushdown Automata";
+
+    vector<string> posibleStates = {"q0", "q1"};  // Q
+    vector<string> alphabet = {"a", "b"};         // Σ
+    vector<string> stackAlphabet = {"A", "Z"};    // Γ
+    map<tuple<string, string, string>, pair<string, vector<string>>>
+        transitionMap = {
+            {make_tuple("q0", "", "_"), make_pair("q1", vector<string>{"Z"})},
+            {make_tuple("q1", "0", "0"), make_pair("q1", vector<string>{"0"})},
+            {make_tuple("q1", "0", "Z"), make_pair("q1", vector<string>{"0"})},
+            {make_tuple("q1", "1", "0"), make_pair("q2", vector<string>{"_"})},
+            {make_tuple("q2", "", "0"), make_pair("q3", vector<string>{"_"})},
+            {make_tuple("q3", "1", "0"), make_pair("q2", vector<string>{"_"})},
+            {make_tuple("q3", "", "Z"),
+             make_pair("q4", vector<string>{"_"})}};  // δ
+
+    string startState = "q0";             // q0
+    string stackStartSymbol = "λ";        // Z0
+    vector<string> finalStates = {"q4"};  // F
+
+    PushdownAutomaton(automatonName, posibleStates, alphabet, stackAlphabet,
+                      transitionMap, startState, stackStartSymbol, finalStates);
+}
+
+void PDA2() {}
+
+void TuringMachine() {}
+
+void PDA_manager() {
+    /* ------------------------- Variables ------------------------- */
+    /* - Menu - */
+    int userChoice;
+    bool run = true;
+    bool validString = false;
+
+    /* - Auxiliaries - */
+    int i, a, automatonChoice, methodChoice;
+    Automaton automaton;
+
+    /* --------------------------- Code ---------------------------- */
+    while (run == true) {
+        diplay_PDA_TuringMachine_Menu();
+        while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 4))) {
+            cin.clear();
+            cin.ignore();
+        }
+
+        switch (userChoice) {
+            case 1:
+                PDA1();
+                break;
+
+            case 2:
+                PDA2();
+                break;
+
+            case 3:
+                TuringMachine();
+                break;
+
+            case 4:
+                endTitle();
+                run = false;
+                break;
+        }
+    }
+}
+
+int main() {
+    /* ------------------------- Variables ------------------------- */
+    /* - Menu - */
+    int userChoice;
+    bool run = true;
+    bool validString = false;
+
+    /* - Auxiliaries - */
+    int i, a, automatonChoice, methodChoice;
+    Automaton automaton;
+
+    /* --------------------------- Code ---------------------------- */
+    while (run == true) {
+        diplayMainMenu();
+        while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 3))) {
+            cin.clear();
+            cin.ignore();
+        }
+
+        switch (userChoice) {
+            case 1:
+                AFD_AFND_manager();
+                break;
+
+            case 2:
+                PDA_manager();
+                break;
+
+            case 3:
                 endTitle();
                 run = false;
                 break;
