@@ -9,7 +9,7 @@
  * +----------------------------------------------------------
  * | Author.......: Vanessa Reteguín <vanessa@reteguin.com>
  * | First release: September 26th, 2025
- * | Last update..: November 29th, 2025
+ * | Last update..: November 30th, 2025
  * | WhatIs.......: CFLAP - Main
  * +----------------------------------------------------------------------------+
  */
@@ -1423,6 +1423,94 @@ class PushdownAutomaton {
         finalStates = _finalStates;
     }
 
+    void printPosibleStates() {
+        int i;
+        cout << endl << "Conjunto de Estados Posibles  Q: {";
+        for (i = 0; i < posibleStates.size(); i++) {
+            if (i != 0) {
+                cout << ", ";
+            }
+            cout << posibleStates[i];
+        }
+        cout << "}";
+    }
+
+    void printAlphabet() {
+        int i;
+        cout << endl << "Alfabeto                      Σ: {";
+        for (i = 0; i < alphabet.size(); i++) {
+            if (i != 0) {
+                cout << ", ";
+            }
+            cout << alphabet[i];
+        }
+        cout << "}";
+    }
+
+    void printInitialState() {
+        cout << endl << "Estado Inicial                s: " << initialState;
+    }
+
+    void printFinalStates() {
+        int i;
+        cout << endl << "Conjunto de Estados finales   F: {";
+        for (i = 0; i < finalStates.size(); i++) {
+            if (i != 0) {
+                cout << ", ";
+            }
+            cout << finalStates[i];
+        }
+        cout << "}";
+    }
+
+    void printTransitionMap() {
+        bool AFND = false;
+        cout << endl << "Funciones de transición       𝜹:" << endl;
+
+        for (auto transition : transitionMap) {
+            cout << "    T(" << transition.first.first << ", "
+                 << transition.first.second << ") = ";
+            for (auto element : transition.second) {
+                cout << element << " ";
+            }
+            if (transition.second.size() > 1) {
+                AFND = true;
+            }
+            cout << endl;
+        }
+
+        cout << "               Tipo de autómata: ";
+        if (AFND) {
+            cout << "Autómata Finito\n                                 No "
+                    "Determinístico (AFND)"
+                 << endl;
+        } else {
+            cout << "Autómata Finito\n                                 "
+                    "Determinístico (AFD)"
+                 << endl;
+        }
+    }
+
+    void printAtributes() {
+        cout << endl
+             << "-------------------<{ " << automatonName
+             << " }>-------------------";
+        cout << endl << "A = (Q, Σ, Γ, q0, Z0, |    δ, s, F)";
+
+        printPosibleStates();
+
+        printAlphabet();
+
+        printInitialState();
+
+        printFinalStates();
+
+        printTransitionMap();
+
+        cout << "---------------------------------------------------------"
+             << endl;
+    }
+
     void runAutomaton() {
         /* - Auxiliaries - */
         int i;
@@ -1549,8 +1637,12 @@ void PDA1() {
     string stackStartSymbol = "λ";        // Z0
     vector<string> finalStates = {"q4"};  // F
 
-    PushdownAutomaton(automatonName, posibleStates, alphabet, stackAlphabet,
-                      transitionMap, startState, stackStartSymbol, finalStates);
+    PushdownAutomaton automaton1(automatonName, posibleStates, alphabet,
+                                 stackAlphabet, transitionMap, startState,
+                                 stackStartSymbol, finalStates);
+
+    automaton1.printAtributes();
+    automaton1.runAutomaton();
 }
 
 void PDA2() {}
@@ -1618,11 +1710,11 @@ int main() {
 
         switch (userChoice) {
             case 1:
-                AFD_AFND_manager();
+                PDA_manager();
                 break;
 
             case 2:
-                PDA_manager();
+                AFD_AFND_manager();
                 break;
 
             case 3:
