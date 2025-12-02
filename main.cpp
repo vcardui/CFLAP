@@ -9,7 +9,7 @@
  * +----------------------------------------------------------
  * | Author.......: Vanessa Reteguín <vanessa@reteguin.com>
  * | First release: September 26th, 2025
- * | Last update..: November 30th, 2025
+ * | Last update..: December 2nd, 2025
  * | WhatIs.......: CFLAP - Main
  * +----------------------------------------------------------------------------+
  */
@@ -116,7 +116,8 @@ void diplayMainMenu() {
          << "\n.---------------------------."
             "\n||     -{ MAIN MENU }-     ||"
             "\n.---------------------------."
-            "\n| [1] Autómatas de pila     |"
+            "\n| [1] Autómatas de pila y   |"
+            "\n|     Máquinas de Turing    |"
             "\n| [2] Autómatas             |"
             "\n|     finitos deterministas |"
             "\n|     y no deterministas    |"
@@ -127,12 +128,11 @@ void diplayMainMenu() {
 void diplay_PDA_TuringMachine_Menu() {
     cout << endl
          << "\n.----------------------------------."
-            "\n|| -{ PDA y Máquinas de turing }- ||"
+            "\n|| -{ PDA y Máquinas de Turing }- ||"
             "\n.----------------------------------."
-            "\n| [1] Autómata de pila 1           |"
-            "\n| [2] Autómata de pila 2           |"
-            "\n| [3] Máquina de turing            |"
-            "\n|                        [4] Salir |"
+            "\n| [1] Autómata de pila             |"
+            "\n| [2] Máquina de turing            |"
+            "\n|                        [3] Salir |"
             "\n.----------------------------------.\n";
 }
 
@@ -1397,7 +1397,7 @@ class PushdownAutomaton {
     vector<string> posibleStates;  // Q
     vector<string> alphabet;       // Σ
     vector<string> stackAlphabet;  // Γ
-    map<tuple<string, string, string>, pair<string, vector<string>>>
+    map<tuple<string, string, string>, pair<pair<string, string>, string>>
         transitionMap;  // δ
 
     string startState;           // q0
@@ -1409,7 +1409,7 @@ class PushdownAutomaton {
     PushdownAutomaton(
         string _automatonName, vector<string> _posibleStates,
         vector<string> _alphabet, vector<string> _stackAlphabet,
-        map<tuple<string, string, string>, pair<string, vector<string>>>
+        map<tuple<string, string, string>, pair<pair<string, string>, string>>
             _transitionMap,
         string _startState, string _stackStartSymbol,
         vector<string> _finalStates) {
@@ -1421,94 +1421,6 @@ class PushdownAutomaton {
         startState = _startState;
         stackStartSymbol = _stackStartSymbol;
         finalStates = _finalStates;
-    }
-
-    void printPosibleStates() {
-        int i;
-        cout << endl << "Conjunto de Estados Posibles  Q: {";
-        for (i = 0; i < posibleStates.size(); i++) {
-            if (i != 0) {
-                cout << ", ";
-            }
-            cout << posibleStates[i];
-        }
-        cout << "}";
-    }
-
-    void printAlphabet() {
-        int i;
-        cout << endl << "Alfabeto                      Σ: {";
-        for (i = 0; i < alphabet.size(); i++) {
-            if (i != 0) {
-                cout << ", ";
-            }
-            cout << alphabet[i];
-        }
-        cout << "}";
-    }
-
-    void printInitialState() {
-        cout << endl << "Estado Inicial                s: " << initialState;
-    }
-
-    void printFinalStates() {
-        int i;
-        cout << endl << "Conjunto de Estados finales   F: {";
-        for (i = 0; i < finalStates.size(); i++) {
-            if (i != 0) {
-                cout << ", ";
-            }
-            cout << finalStates[i];
-        }
-        cout << "}";
-    }
-
-    void printTransitionMap() {
-        bool AFND = false;
-        cout << endl << "Funciones de transición       𝜹:" << endl;
-
-        for (auto transition : transitionMap) {
-            cout << "    T(" << transition.first.first << ", "
-                 << transition.first.second << ") = ";
-            for (auto element : transition.second) {
-                cout << element << " ";
-            }
-            if (transition.second.size() > 1) {
-                AFND = true;
-            }
-            cout << endl;
-        }
-
-        cout << "               Tipo de autómata: ";
-        if (AFND) {
-            cout << "Autómata Finito\n                                 No "
-                    "Determinístico (AFND)"
-                 << endl;
-        } else {
-            cout << "Autómata Finito\n                                 "
-                    "Determinístico (AFD)"
-                 << endl;
-        }
-    }
-
-    void printAtributes() {
-        cout << endl
-             << "-------------------<{ " << automatonName
-             << " }>-------------------";
-        cout << endl << "A = (Q, Σ, Γ, q0, Z0, |    δ, s, F)";
-
-        printPosibleStates();
-
-        printAlphabet();
-
-        printInitialState();
-
-        printFinalStates();
-
-        printTransitionMap();
-
-        cout << "---------------------------------------------------------"
-             << endl;
     }
 
     void runAutomaton() {
@@ -1581,7 +1493,7 @@ class PushdownAutomaton {
 
     static vector<string> getNextPDAState(
         bool verbose, vector<string> initialState, string transitionInput,
-        map<tuple<string, string, string>, pair<string, vector<string>>>
+        map<tuple<string, string, string>, pair<pair<string, string>, string>>
             transitionMap,
         stack<string> theStack) {
         vector<string> nextState;
@@ -1591,6 +1503,7 @@ class PushdownAutomaton {
                 if ((currentState == get<0>(element.first)) &&
                     (transitionInput == get<1>(element.first)) &&
                     (theStack.top() == get<2>(element.first))) {
+                    /*
                     cout << "found!" << endl;
 
                     nextState.push_back(element.second.first);
@@ -1603,6 +1516,7 @@ class PushdownAutomaton {
                             theStack.push(i);
                         }
                     }
+                    */
                 } else {
                     if (verbose == true) {
                         cout << endl << "[!] Transición no válida" << endl;
@@ -1616,22 +1530,32 @@ class PushdownAutomaton {
 };
 
 void PDA1() {
-    string automatonName =
-        "Prueba #1: Geeks for geeks - Introduction of Pushdown Automata";
+    string automatonName = "Examen 3er parcial";
 
-    vector<string> posibleStates = {"q0", "q1"};  // Q
-    vector<string> alphabet = {"a", "b"};         // Σ
-    vector<string> stackAlphabet = {"A", "Z"};    // Γ
-    map<tuple<string, string, string>, pair<string, vector<string>>>
+    vector<string> posibleStates = {"q0", "q1", "q2", "q3", "q4", "q5"};  // Q
+    vector<string> alphabet = {"a", "b"};                                 // Σ
+    vector<string> stackAlphabet = {"A", "B", "Z"};                       // Γ
+    map<tuple<string, string, string>, pair<pair<string, string>, string>>
         transitionMap = {
-            {make_tuple("q0", "", "_"), make_pair("q1", vector<string>{"Z"})},
-            {make_tuple("q1", "0", "0"), make_pair("q1", vector<string>{"0"})},
-            {make_tuple("q1", "0", "Z"), make_pair("q1", vector<string>{"0"})},
-            {make_tuple("q1", "1", "0"), make_pair("q2", vector<string>{"_"})},
-            {make_tuple("q2", "", "0"), make_pair("q3", vector<string>{"_"})},
-            {make_tuple("q3", "1", "0"), make_pair("q2", vector<string>{"_"})},
-            {make_tuple("q3", "", "Z"),
-             make_pair("q4", vector<string>{"_"})}};  // δ
+            {make_tuple("q0", "", ""), make_pair(make_pair("push", "Z"), "q1")},
+            {make_tuple("q1", "a", "A"),
+             make_pair(make_pair("push", "A"), "q1")},
+            {make_tuple("q1", "a", "Z"),
+             make_pair(make_pair("push", "A"), "q1")},
+            {make_tuple("q1", "", "A"),
+             make_pair(make_pair("push", "B"), "q2")},
+            {make_tuple("q1", "", "Z"),
+             make_pair(make_pair("push", "B"), "q2")},
+            {make_tuple("q2", "", "B"),
+             make_pair(make_pair("push", "B"), "q3")},
+            {make_tuple("q2", "", "A"),
+             make_pair(make_pair("push", "B"), "q3")},
+            {make_tuple("q2", "", "Z"),
+             make_pair(make_pair("push", "B"), "q3")},
+            {make_tuple("q3", "b", "B"), make_pair(make_pair("pop", ""), "q4")},
+            {make_tuple("q4", "b", "A"), make_pair(make_pair("pop", ""), "q4")},
+            {make_tuple("q4", "b", "B"),
+             make_pair(make_pair("pop", ""), "q4")}};  // δ
 
     string startState = "q0";             // q0
     string stackStartSymbol = "λ";        // Z0
@@ -1640,16 +1564,12 @@ void PDA1() {
     PushdownAutomaton automaton1(automatonName, posibleStates, alphabet,
                                  stackAlphabet, transitionMap, startState,
                                  stackStartSymbol, finalStates);
-
-    automaton1.printAtributes();
     automaton1.runAutomaton();
 }
 
-void PDA2() {}
-
 void TuringMachine() {}
 
-void PDA_manager() {
+void PDA_TuringMachine_manager() {
     /* ------------------------- Variables ------------------------- */
     /* - Menu - */
     int userChoice;
@@ -1663,7 +1583,7 @@ void PDA_manager() {
     /* --------------------------- Code ---------------------------- */
     while (run == true) {
         diplay_PDA_TuringMachine_Menu();
-        while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 4))) {
+        while (!((cin >> userChoice) && (userChoice >= 1 && userChoice <= 3))) {
             cin.clear();
             cin.ignore();
         }
@@ -1674,14 +1594,10 @@ void PDA_manager() {
                 break;
 
             case 2:
-                PDA2();
-                break;
-
-            case 3:
                 TuringMachine();
                 break;
 
-            case 4:
+            case 3:
                 endTitle();
                 run = false;
                 break;
@@ -1710,7 +1626,7 @@ int main() {
 
         switch (userChoice) {
             case 1:
-                PDA_manager();
+                PDA_TuringMachine_manager();
                 break;
 
             case 2:
