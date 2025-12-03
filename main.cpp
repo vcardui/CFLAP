@@ -1400,7 +1400,7 @@ class PushdownAutomaton {
     map<tuple<string, string, string>, pair<pair<string, string>, string>>
         transitionMap;  // δ
 
-    string startState;           // q0
+    string initialState;         // q0
     string stackStartSymbol;     // Z0
     vector<string> finalStates;  // F
 
@@ -1411,28 +1411,25 @@ class PushdownAutomaton {
         vector<string> _alphabet, vector<string> _stackAlphabet,
         map<tuple<string, string, string>, pair<pair<string, string>, string>>
             _transitionMap,
-        string _startState, string _stackStartSymbol,
+        string _initialState, string _stackStartSymbol,
         vector<string> _finalStates) {
         automatonName = _automatonName;
         posibleStates = _posibleStates;
         alphabet = _alphabet;
         stackAlphabet = _stackAlphabet;
         transitionMap = _transitionMap;
-        startState = _startState;
+        initialState = _initialState;
         stackStartSymbol = _stackStartSymbol;
         finalStates = _finalStates;
     }
 
     void runAutomaton() {
         /* - Auxiliaries - */
-        int i;
+        int $i, $j;
 
-        string currentCharacter;
+        string currentToken;
+        string nextState;
         string automatonInput;
-        vector<string> nextState;
-        string currentByte;
-
-        bool validChain = true;
 
         /* - Validators - */
         bool validString = false;
@@ -1442,9 +1439,8 @@ class PushdownAutomaton {
             cin >> automatonInput;
 
             for (int i = 0; i < automatonInput.length(); i++) {
-                currentCharacter = automatonInput[i];
-                auto it =
-                    find(alphabet.begin(), alphabet.end(), currentCharacter);
+                currentToken = automatonInput[i];
+                auto it = find(alphabet.begin(), alphabet.end(), currentToken);
 
                 if (it != alphabet.end()) {
                     validString = true;
@@ -1455,74 +1451,121 @@ class PushdownAutomaton {
                 }
             }
             validString = true;
+            cout << endl << "[*] Cadena válida" << endl;
         }
 
-        cout << endl << "[*] Cadena válida" << endl;
-        nextState.push_back(startState);
+        if (validString) {
+            nextState = initialState;
 
-        cout << endl << "[*] Estado inicial: " << nextState[0] << endl;
-
-        for (i = 0; i < automatonInput.length(); i++) {
-            currentByte = automatonInput[i];
-            nextState = getNextPDAState(true, nextState, currentByte,
-                                        transitionMap, theStack);
-        }
-
-        for (auto state : nextState) {
-            auto it = find(finalStates.begin(), finalStates.end(), state);
-
-            if (it != finalStates.end()) {
-                cout << endl << "[*] Estado final: " << state;
-                cout << endl;
+            if (theStack.empty()) {
+                cout << endl << "Pila: " << "λ (pila vacía)" << endl;
             } else {
-                cout << endl << "[!] Estado final no válido: " << state << endl;
-                cout << endl << "[!] Cadena no válida";
-                validChain = false;
-                break;
+                cout << "Pila: " << theStack.top() << endl;
             }
-        }
+            cout << "Estado: " << nextState << endl;
 
-        cout << endl << "\n\n###### Resultado final ######";
-        cout << endl << "Cadena: " << automatonInput;
-        if (validChain == false) {
-            cout << " NO es válida [X]";
-        } else {
-            cout << " es válida [✓]";
+            for ($i = 0; $i < automatonInput.length(); $i++) {
+                currentToken = automatonInput[$i];
+
+                cout << endl << "Palabra: ";
+                for ($j = $i; $j < automatonInput.length(); $j++) {
+                    cout << automatonInput[$j];
+                }
+                cout << endl;
+
+                nextState = getNextPDAState(nextState, currentToken);
+            }
+
+            for (auto state : finalStates) {
+                if (state == nextState) {
+                    cout << endl << "[*] Cadena válida";
+                } else {
+                    cout << endl
+                         << "[!] Cadena no válida\nEstado final: " << nextState;
+                }
+            }
         }
     }
 
-    static vector<string> getNextPDAState(
-        bool verbose, vector<string> initialState, string transitionInput,
-        map<tuple<string, string, string>, pair<pair<string, string>, string>>
-            transitionMap,
-        stack<string> theStack) {
-        vector<string> nextState;
+    string getNextPDAState(string initialState, string currentToken) {
+        /* - Auxiliaries - */
+        string nextState = "";
+        string stackTop;
+        bool foundTransition = false;
 
-        for (auto currentState : initialState) {
-            for (auto element : transitionMap) {
-                if ((currentState == get<0>(element.first)) &&
-                    (transitionInput == get<1>(element.first)) &&
-                    (theStack.top() == get<2>(element.first))) {
-                    /*
-                    cout << "found!" << endl;
+        /* - Automaton - */
+        string transition_initialState;
+        string transition_currentToken;
+        string transition_topStack;
+        string transition_action;
+        string transition_actionToken;
+        string transition_finalState;
 
-                    nextState.push_back(element.second.first);
-                    cout << "siguiente estado: " << nextState.front() << endl;
+        for (auto element : transitionMap) {
+            transition_initialState = get<0>(element.first);
+            transition_currentToken = get<1>(element.first);
+            transition_topStack = get<2>(element.first);
 
-                    if (element.second.second[0] == "_") {
-                        theStack.pop();
-                    } else {
-                        for (auto i : element.second.second) {
-                            theStack.push(i);
-                        }
-                    }
-                    */
-                } else {
-                    if (verbose == true) {
-                        cout << endl << "[!] Transición no válida" << endl;
-                    }
-                }
+            transition_action = element.second.first.first;
+            transition_actionToken = element.second.first.second;
+            transition_finalState = element.second.second;
+
+            if (theStack.empty()) {
+                stackTop = "";
+            } else {
+                stackTop = theStack.top();
             }
+
+            if ((initialState == transition_initialState) &&
+                ((transition_currentToken == "") ||
+                 (currentToken == transition_currentToken)) &&
+                (stackTop == transition_topStack)) {
+                cout << "     --> Transición encontrada [" << currentToken
+                     << "] <--" << endl;
+                foundTransition = true;
+
+                if (transition_action == "push") {
+                    theStack.push(transition_actionToken);
+                } else if (transition_action == "pop") {
+                    theStack.pop();
+                }
+
+                nextState = transition_finalState;
+                if (theStack.empty()) {
+                    cout << "Pila: " << "λ (pila vacía)" << endl;
+                } else {
+                    cout << "Pila: " << theStack.top() << endl;
+                }
+                cout << "Estado: " << nextState << endl;
+
+                cout << "Transición aplicada: (" << transition_initialState
+                     << ", ";
+                if (transition_currentToken == "") {
+                    cout << "λ";
+                } else {
+                    cout << transition_currentToken;
+                }
+                cout << ", ";
+
+                if (transition_topStack == "") {
+                    cout << "λ";
+                } else {
+                    cout << transition_topStack;
+                }
+
+                cout << ", ";
+
+                if (transition_action == "push") {
+                    cout << "Push(" << transition_actionToken << "), ";
+                } else if (transition_action == "pop") {
+                    cout << "Pop(), ";
+                }
+                cout << transition_finalState << ")" << endl;
+            }
+        }
+
+        if (!foundTransition) {
+            cout << endl << "[*] Transición no encontrada" << endl;
         }
 
         return nextState;
@@ -1554,20 +1597,238 @@ void PDA1() {
              make_pair(make_pair("push", "B"), "q3")},
             {make_tuple("q3", "b", "B"), make_pair(make_pair("pop", ""), "q4")},
             {make_tuple("q4", "b", "A"), make_pair(make_pair("pop", ""), "q4")},
-            {make_tuple("q4", "b", "B"),
-             make_pair(make_pair("pop", ""), "q4")}};  // δ
+            {make_tuple("q4", "b", "B"), make_pair(make_pair("pop", ""), "q4")},
+            {make_tuple("q4", "", "Z"),
+             make_pair(make_pair("pop", ""), "q5")}};  // δ
 
-    string startState = "q0";             // q0
+    string initialState = "q0";           // q0
     string stackStartSymbol = "λ";        // Z0
-    vector<string> finalStates = {"q4"};  // F
+    vector<string> finalStates = {"q5"};  // F
 
     PushdownAutomaton automaton1(automatonName, posibleStates, alphabet,
-                                 stackAlphabet, transitionMap, startState,
+                                 stackAlphabet, transitionMap, initialState,
                                  stackStartSymbol, finalStates);
     automaton1.runAutomaton();
 }
 
-void TuringMachine() {}
+class TuringMachine {
+   public:
+    string machineName;
+
+    vector<string> posibleStates;  // Q
+    vector<string> alphabet;       // Γ
+    string blankSymbol;            // b
+    vector<string> inputSymbols;   // Σ
+    string initialState;           // q0
+    vector<string> finalStates;    // F
+
+    map<pair<string, string>, tuple<string, string, string>>
+        transitionMap;  // δ
+
+    vector<string> tape;
+    int head;
+
+    TuringMachine(string _machineName, vector<string> _posibleStates,
+                  vector<string> _alphabet, string _blankSymbol,
+                  vector<string> _inputSymbols, string _initialState,
+                  vector<string> _finalStates,
+                  map<pair<string, string>, tuple<string, string, string>>
+                      _transitionMap) {
+        machineName = _machineName;
+        posibleStates = _posibleStates;
+        alphabet = _alphabet;
+        blankSymbol = _blankSymbol;
+        inputSymbols = _inputSymbols;
+        initialState = _initialState;
+        finalStates = _finalStates;
+        transitionMap = _transitionMap;
+    }
+
+    void runTuringMachine() {
+        /* - Auxiliaries - */
+        int $i, $j;
+
+        string currentToken;
+        string nextState;
+        string machineInput;
+
+        /* - Validators - */
+        bool validString = false;
+
+        while (validString == false) {
+            cout << "Ingrese una cadena: ";
+            cin >> machineInput;
+
+            for (int i = 0; i < machineInput.length(); i++) {
+                currentToken = machineInput[i];
+                auto it = find(alphabet.begin(), alphabet.end(), currentToken);
+
+                if (it != alphabet.end()) {
+                    validString = true;
+                } else {
+                    cout << endl << "    [!] Cadena no válida\n" << endl;
+                    validString = false;
+                    break;
+                }
+            }
+            validString = true;
+            cout << endl << "[*] Cadena válida" << endl;
+        }
+
+        if (validString) {
+            tape.push_back(blankSymbol);
+            tape.push_back(blankSymbol);
+            for (int i = 0; i < machineInput.length(); i++) {
+                currentToken = machineInput[i];
+                tape.push_back(currentToken);
+            }
+            tape.push_back(blankSymbol);
+            tape.push_back(blankSymbol);
+
+            //
+            nextState = initialState;
+            head = 2;
+
+            int i = 1;
+            while ((nextState != finalStates[0]) && (i <= 20)) {
+                cout << endl << "{" << i << "}";
+                currentToken = tape[head];
+                printTape();
+                nextState = getNextTuringMachineState(nextState, currentToken);
+                i++;
+            }
+
+            for (auto state : finalStates) {
+                if (state == nextState) {
+                    cout << endl << "[*] Cadena válida";
+                } else {
+                    cout << endl
+                         << "[!] Cadena no válida\nEstado final: " << nextState;
+                }
+            }
+
+            printTape();
+        }
+    }
+
+    void printTape() {
+        cout << endl << "Cinta: ";
+        for (int $j = 0; $j < tape.size(); $j++) {
+            if ($j == head) {
+                cout << "[" << tape[$j] << "] ";
+            } else {
+                cout << tape[$j] << " ";
+            }
+        }
+        cout << endl;
+    }
+
+    string getNextTuringMachineState(string initialState, string currentToken) {
+        /* - Auxiliaries - */
+        string nextState = "";
+        bool foundTransition = false;
+
+        /* - Automaton - */
+        string transition_initialState;
+        string transition_currentToken;
+        string transition_tokenToWrite;
+        string transition_action;
+        string transition_nextState;
+
+        for (auto element : transitionMap) {
+            transition_initialState = element.first.first;
+            transition_currentToken = element.first.second;
+            transition_tokenToWrite = get<0>(element.second);
+            transition_action = get<1>(element.second);
+            transition_nextState = get<2>(element.second);
+
+            if ((transition_initialState == initialState) &&
+                (transition_currentToken == currentToken)) {
+                cout << "     --> Transición encontrada [" << currentToken
+                     << "] <--" << endl;
+                foundTransition = true;
+
+                tape[head] = transition_tokenToWrite;
+                cout << "[*] El elemento " << currentToken
+                     << " ha sido remplazado por " << transition_tokenToWrite
+                     << endl;
+
+                cout << "Estado inicial: " << transition_initialState << endl;
+                cout << "Transición: " << transition_currentToken << ", "
+                     << transition_tokenToWrite << ", " << transition_action
+                     << endl;
+                cout << "Estado final: " << transition_nextState << endl;
+
+                if ((transition_action == "L") && (head <= 0)) {
+                    cout << endl
+                         << "[!] Error en transición:\n\tCabezal al inicio de "
+                            "la cinta - No se puede hacer movimiento hacia la "
+                            "izquierda (L)"
+                         << endl;
+                } else if ((transition_action == "R") &&
+                           (head >= (tape.size() - 1))) {
+                    cout << endl
+                         << "[!] Error en transición:\n\tCabezal al inicio de "
+                            "la cinta - No se puede hacer movimiento hacia la "
+                            "derecha (R)"
+                         << endl;
+                } else if (transition_action == "L") {
+                    head--;
+                    cout << "[*] La cinta se ha recorrido un elemento hacia la "
+                            "izquierda"
+                         << endl;
+                } else if (transition_action == "R") {
+                    head++;
+                    cout << "[*] La cinta se ha recorrido un elemento hacia la "
+                            "derecha"
+                         << endl;
+                } else if (transition_action == "S") {
+                    cout << "[*] Fin de movimiento de la cinta" << endl;
+                } else {
+                    cout << "[!] Error en movimiento de cinta" << endl;
+                }
+
+                nextState = transition_nextState;
+            }
+        }
+
+        if (!foundTransition) {
+            cout << endl << "[*] Transición no encontrada" << endl;
+        }
+
+        return nextState;
+    }
+};
+
+void TuringMachine1() {
+    string machineName = "Examen 3er parcial";
+
+    vector<string> posibleStates = {"q0", "q1", "q2", "q3", "q4"};  // Q
+    vector<string> alphabet = {"0", "1"};      // Γ (tape alphabet symbols)
+    string blankSymbol = "b";                  // b (blank symbol)
+    vector<string> inputSymbols = {"0", "1"};  // Σ (input symbols)
+    string initialState = "q0";                // q0
+    vector<string> finalStates = {"q4"};       // F
+
+    map<pair<string, string>, tuple<string, string, string>> transitionMap = {
+        {make_pair("q0", "0"), make_tuple("0", "R", "q0")},
+        {make_pair("q0", "1"), make_tuple("1", "R", "q1")},
+        {make_pair("q1", "0"), make_tuple("0", "R", "q1")},
+        {make_pair("q1", "1"), make_tuple("1", "R", "q2")},
+        {make_pair("q2", "0"), make_tuple("0", "R", "q2")},
+        {make_pair("q2", "1"), make_tuple("1", "R", "q1")},
+        {make_pair("q2", "b"), make_tuple("b", "L", "q3")},
+        {make_pair("q3", "1"), make_tuple("0", "L", "q3")},
+        {make_pair("q3", "0"), make_tuple("1", "L", "q3")},
+        {make_pair("q0", "b"), make_tuple("b", "S", "q4")},
+        {make_pair("q1", "b"), make_tuple("b", "S", "q4")},
+        {make_pair("q3", "b"), make_tuple("b", "S", "q4")}};  // δ
+
+    TuringMachine TuringMachine1(machineName, posibleStates, alphabet,
+                                 blankSymbol, inputSymbols, initialState,
+                                 finalStates, transitionMap);
+    TuringMachine1.runTuringMachine();
+}
 
 void PDA_TuringMachine_manager() {
     /* ------------------------- Variables ------------------------- */
@@ -1594,7 +1855,7 @@ void PDA_TuringMachine_manager() {
                 break;
 
             case 2:
-                TuringMachine();
+                TuringMachine1();
                 break;
 
             case 3:
